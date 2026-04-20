@@ -33,7 +33,7 @@
       position: fixed;
       inset: 0;
       overflow: hidden;
-      background: #000;
+      background: #000 url("heart_poster.jpg") center center / contain no-repeat;
     }
 
     .video-bg {
@@ -43,7 +43,7 @@
       height: 100%;
       object-fit: contain;
       object-position: center center;
-      background: #000;
+      background: #000 url("heart_poster.jpg") center center / contain no-repeat;
       filter: none;
     }
 
@@ -142,7 +142,21 @@
 </head>
 <body>
   <main class="scene">
-    <video class="video-bg" id="bgVideo" src="heart_sea_h264.mp4" preload="auto" autoplay loop muted playsinline webkit-playsinline></video>
+    <video
+      class="video-bg"
+      id="bgVideo"
+      src="heart_sea_wechat.mp4"
+      poster="heart_poster.jpg"
+      preload="auto"
+      autoplay
+      loop
+      muted
+      playsinline
+      webkit-playsinline
+      x5-playsinline
+      x5-video-player-type="h5"
+      x5-video-player-fullscreen="false"
+    ></video>
     <div class="shade"></div>
     <canvas id="sparkCanvas" aria-label="点击粒子"></canvas>
     <div class="title">生日快乐</div>
@@ -236,15 +250,20 @@
       window.setTimeout(() => el.remove(), 1550);
     }
 
-    async function start() {
-      subtitle.textContent = `${DEFAULT_NAME}，愿你的世界永远有光奔赴而来`;
-      started = true;
-
+    async function playVideo() {
+      video.muted = true;
+      video.playsInline = true;
       try {
         await video.play();
       } catch (_error) {
-        // Muted autoplay can still be delayed by some embedded browsers.
+        // WeChat may wait for its bridge or the first user touch.
       }
+    }
+
+    async function start() {
+      subtitle.textContent = `${DEFAULT_NAME}，愿你的世界永远有光奔赴而来`;
+      started = true;
+      await playVideo();
 
       burst(width * 0.5, height * 0.56, true);
       floatWord(width * 0.5, height * 0.5);
@@ -252,10 +271,15 @@
 
     document.addEventListener("pointerdown", (event) => {
       if (!started) return;
+      playVideo();
       burst(event.clientX, event.clientY, true);
       floatWord(event.clientX, event.clientY);
     }, { passive: true });
 
+    document.addEventListener("WeixinJSBridgeReady", playVideo, false);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) playVideo();
+    });
     window.addEventListener("resize", resize);
 
     resize();
