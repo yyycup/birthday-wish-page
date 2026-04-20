@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>生日快乐</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      letter-spacing: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #030405;
+      color: #f7fbff;
+      font-family: "Microsoft YaHei UI", "PingFang SC", Arial, sans-serif;
+    }
+
+    body {
+      position: fixed;
+      inset: 0;
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    .scene {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .video-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center center;
+      background: #000;
+      filter: none;
+    }
+
+    .shade {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 28%, rgba(0, 0, 0, 0.12));
+      pointer-events: none;
+    }
+
+    #sparkCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .title {
+      position: absolute;
+      top: max(22px, env(safe-area-inset-top));
+      left: 50%;
+      z-index: 2;
+      width: min(92vw, 720px);
+      transform: translateX(-50%);
+      color: #f8fbff;
+      font-size: clamp(32px, 5.5vw, 58px);
+      font-weight: 900;
+      line-height: 1.1;
+      text-align: center;
+      text-shadow:
+        0 0 8px rgba(255, 255, 255, 0.9),
+        0 0 18px rgba(180, 225, 255, 0.58);
+      pointer-events: none;
+    }
+
+    .subtitle {
+      position: absolute;
+      left: 50%;
+      bottom: max(28px, env(safe-area-inset-bottom));
+      z-index: 2;
+      width: min(92vw, 760px);
+      transform: translateX(-50%);
+      color: #f8fbff;
+      font-size: clamp(15px, 2.8vw, 24px);
+      font-weight: 800;
+      line-height: 1.45;
+      text-align: center;
+      text-shadow:
+        0 0 8px rgba(255, 255, 255, 0.86),
+        0 0 16px rgba(180, 225, 255, 0.48);
+      pointer-events: none;
+    }
+
+    .start {
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background: rgba(3, 4, 5, 0.72);
+      transition: opacity 420ms ease, visibility 420ms ease;
+    }
+
+    .start.hide {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .start-card {
+      width: min(360px, 100%);
+      padding: 22px 18px 18px;
+      border: 1px solid rgba(245, 250, 255, 0.3);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.6);
+      box-shadow: 0 0 44px rgba(245, 250, 255, 0.16);
+      text-align: center;
+    }
+
+    .start-card h1 {
+      margin: 0 0 12px;
+      font-size: 30px;
+      line-height: 1.2;
+      text-shadow: 0 0 18px rgba(245, 250, 255, 0.75);
+    }
+
+    .start-card p {
+      margin: 0 0 16px;
+      color: #d8e2f0;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .name-input {
+      width: 100%;
+      height: 44px;
+      margin-bottom: 12px;
+      padding: 0 12px;
+      border: 1px solid rgba(248, 251, 255, 0.38);
+      border-radius: 8px;
+      outline: none;
+      background: rgba(255, 255, 255, 0.08);
+      color: #f8fbff;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .start-card button {
+      width: 100%;
+      height: 44px;
+      border: 0;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #f7fbff, #86dfff);
+      color: #05070a;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .tap-word {
+      position: fixed;
+      z-index: 4;
+      color: #f8fbff;
+      font-size: 18px;
+      font-weight: 800;
+      white-space: nowrap;
+      text-shadow: 0 0 14px rgba(255, 255, 255, 0.94);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      animation: floatWord 1.5s ease-out forwards;
+    }
+
+    @keyframes floatWord {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, 10px) scale(0.86);
+      }
+      20% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -88px) scale(1.08);
+      }
+    }
+
+    @media (orientation: portrait) {
+      .video-bg {
+        object-fit: contain;
+      }
+
+      .title {
+        top: max(28px, env(safe-area-inset-top));
+      }
+
+      .subtitle {
+        bottom: max(42px, env(safe-area-inset-bottom));
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="scene">
+    <video class="video-bg" id="bgVideo" src="heart_sea_h264.mp4" preload="auto" autoplay loop muted playsinline webkit-playsinline></video>
+    <div class="shade"></div>
+    <canvas id="sparkCanvas" aria-label="点击粒子"></canvas>
+    <div class="title">生日快乐</div>
+    <div class="subtitle" id="subtitle">愿你的世界，永远有光奔赴而来</div>
+  </main>
+
+  <section class="start hide" id="startLayer">
+    <div class="start-card">
+      <h1>生日快乐</h1>
+      <p>轻点一下播放祝福。</p>
+      <button id="startButton" type="button">开始</button>
+    </div>
+  </section>
+
+  <script>
+    const video = document.getElementById("bgVideo");
+    const canvas = document.getElementById("sparkCanvas");
+    const ctx = canvas.getContext("2d");
+    const startLayer = document.getElementById("startLayer");
+    const startButton = document.getElementById("startButton");
+    const subtitle = document.getElementById("subtitle");
+
+    const DEFAULT_NAME = "小美";
+    const words = ["生日快乐", "平安喜乐", "闪闪发光", "万事胜意", "天天开心"];
+    const colors = ["#f8fbff", "#dff2ff", "#86dfff", "#ffe6a3", "#ffb6c8"];
+
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+    let particles = [];
+    let started = false;
+
+    function random(min, max) {
+      return min + Math.random() * (max - min);
+    }
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function burst(x, y, strong = true) {
+      const count = strong ? 86 : 42;
+      for (let i = 0; i < count; i += 1) {
+        const angle = random(0, Math.PI * 2);
+        const speed = random(1.2, strong ? 6.5 : 4.0);
+        particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          r: random(1.2, 3.8),
+          life: random(34, 72),
+          maxLife: 72,
+          color: colors[Math.floor(random(0, colors.length))]
+        });
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      const live = [];
+      ctx.save();
+      ctx.shadowBlur = 16;
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.985;
+        p.vy = p.vy * 0.985 + 0.04;
+        p.life -= 1;
+
+        if (p.life > 0) {
+          live.push(p);
+          const alpha = p.life / p.maxLife;
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = p.color;
+          ctx.shadowColor = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r * (0.7 + alpha), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+      particles = live;
+      requestAnimationFrame(animate);
+    }
+
+    function floatWord(x, y) {
+      const el = document.createElement("div");
+      el.className = "tap-word";
+      el.textContent = words[Math.floor(random(0, words.length))];
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+      document.body.appendChild(el);
+      window.setTimeout(() => el.remove(), 1550);
+    }
+
+    async function start(showFallbackOnError = true) {
+      subtitle.textContent = `${DEFAULT_NAME}，愿你的世界永远有光奔赴而来`;
+      started = true;
+      startLayer.classList.add("hide");
+
+      try {
+        await video.play();
+      } catch (_error) {
+        if (showFallbackOnError) {
+          startLayer.classList.remove("hide");
+        }
+        started = false;
+        return;
+      }
+
+      burst(width * 0.5, height * 0.56, true);
+      floatWord(width * 0.5, height * 0.5);
+    }
+
+    document.addEventListener("pointerdown", (event) => {
+      if (!started) return;
+      burst(event.clientX, event.clientY, true);
+      floatWord(event.clientX, event.clientY);
+    }, { passive: true });
+
+    startButton.addEventListener("click", () => start(true));
+    window.addEventListener("resize", resize);
+
+    resize();
+    animate();
+    start(true);
+  </script>
+</body>
+</html>
